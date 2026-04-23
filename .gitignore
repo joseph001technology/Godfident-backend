@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# FastAPI / Uvicorn
+*.log
+
+# Database
+*.db
+*.sqlite3
+
+# SQLAlchemy cache
+*.sql
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Build / packaging
+dist/
+build/
+*.egg-info/
+
+# Node (if frontend assets exist)
+node_modules/
+
+# Alembic migrations cache
+alembic/versions/__pycache__/
+
+# Static/media generated files
+uploads/
+media/
+staticfiles/
