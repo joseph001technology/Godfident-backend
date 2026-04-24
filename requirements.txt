@@ -54,3 +54,4 @@ websockets==16.0
 # Testing (optional — remove for production if you want lighter builds)
 pytest==8.2.0
 pytest-asyncio==0.23.6
+itsdangerous==2.2.0
