@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
 
     FIREBASE_SERVER_KEY: str = ""
+    
+    ADMIN_USERNAME: str = "admin"
+    ADMIN_PASSWORD: str = "change-me-now"
+    SESSION_SECRET_KEY: str = "godfident-session-key"
 
     @property
     def origins_list(self) -> List[str]:
@@ -34,3 +38,5 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+ 
