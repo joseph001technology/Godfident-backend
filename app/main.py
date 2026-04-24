@@ -1,10 +1,14 @@
 # app/main.py
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
+
 import time
-import secrets
+import os
+import sqladmin
 
 # SQLAdmin
 from sqladmin import Admin, ModelView
@@ -13,6 +17,7 @@ from sqladmin.authentication import AuthenticationBackend
 
 from app.config import settings
 from app.db.database import init_db, engine
+
 from app.models.models import (
     User,
     Reminder,
@@ -28,13 +33,19 @@ from app.models.models import (
 )
 
 from app.routers import (
-    auth, users, dashboard, devotion, bible,
-    reminders, journal, mood, focus, progress,
-    ai_chat, prayer_requests,
+    auth,
+    users,
+    dashboard,
+    devotion,
+    bible,
+    reminders,
+    journal,
+    mood,
+    focus,
+    progress,
+    ai_chat,
+    prayer_requests,
 )
-
- 
- 
 
 
 # ─────────────────────────────────────────────────────────────
@@ -46,6 +57,7 @@ class AdminAuth(AuthenticationBackend):
 
     async def login(self, request: Request) -> bool:
         form = await request.form()
+
         username = form.get("username")
         password = form.get("password")
 
@@ -67,8 +79,10 @@ class AdminAuth(AuthenticationBackend):
 
 
 authentication_backend = AdminAuth()
+
+
 # ─────────────────────────────────────────────────────────────
-# Lifespan
+# LIFESPAN
 # ─────────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -90,10 +104,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# sessions required for admin login
+
+# ─────────────────────────────────────────────────────────────
+# SESSION MIDDLEWARE
+# ─────────────────────────────────────────────────────────────
 app.add_middleware(
     SessionMiddleware,
-    secret_key=settings.SESSION_SECRET_KEY
+    secret_key=settings.SESSION_SECRET_KEY,
 )
 
 
@@ -110,7 +127,22 @@ app.add_middleware(
 
 
 # ─────────────────────────────────────────────────────────────
-# Middleware
+# SQLADMIN STATIC FILES (Render-safe / Cross-platform)
+# ─────────────────────────────────────────────────────────────
+sqladmin_static_path = os.path.join(
+    os.path.dirname(sqladmin.__file__),
+    "statics"
+)
+
+app.mount(
+    "/admin/statics",
+    StaticFiles(directory=sqladmin_static_path),
+    name="admin-statics",
+)
+
+
+# ─────────────────────────────────────────────────────────────
+# MIDDLEWARE
 # ─────────────────────────────────────────────────────────────
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
@@ -122,7 +154,7 @@ async def add_process_time_header(request: Request, call_next):
 
 
 # ─────────────────────────────────────────────────────────────
-# Errors
+# GLOBAL ERROR HANDLER
 # ─────────────────────────────────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -130,7 +162,7 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={
             "detail": "Internal server error",
-            "type": type(exc).__name__
+            "type": type(exc).__name__,
         },
     )
 
@@ -166,7 +198,9 @@ admin = Admin(
 )
 
 
-# ---------------- USERS ----------------
+# ─────────────────────────────────────────────────────────────
+# ADMIN VIEWS
+# ─────────────────────────────────────────────────────────────
 class UserAdmin(ModelView, model=User):
     icon = "fa-solid fa-users"
     column_list = [
@@ -182,7 +216,6 @@ class UserAdmin(ModelView, model=User):
     page_size = 30
 
 
-# ---------------- REMINDERS ----------------
 class ReminderAdmin(ModelView, model=Reminder):
     icon = "fa-solid fa-bell"
     column_list = [
@@ -194,7 +227,6 @@ class ReminderAdmin(ModelView, model=Reminder):
     ]
 
 
-# ---------------- JOURNAL ----------------
 class JournalAdmin(ModelView, model=JournalEntry):
     icon = "fa-solid fa-book"
     column_list = [
@@ -205,7 +237,6 @@ class JournalAdmin(ModelView, model=JournalEntry):
     ]
 
 
-# ---------------- PRAYER ----------------
 class PrayerAdmin(ModelView, model=PrayerRequest):
     icon = "fa-solid fa-hands-praying"
     column_list = [
@@ -216,13 +247,11 @@ class PrayerAdmin(ModelView, model=PrayerRequest):
     ]
 
 
-# ---------------- MOOD ----------------
 class MoodAdmin(ModelView, model=MoodLog):
     icon = "fa-solid fa-face-smile"
     column_list = [MoodLog.id, MoodLog.mood, MoodLog.date]
 
 
-# ---------------- BLOCKED APPS ----------------
 class BlockedAppsAdmin(ModelView, model=BlockedApp):
     icon = "fa-solid fa-mobile-screen"
     column_list = [
@@ -233,7 +262,6 @@ class BlockedAppsAdmin(ModelView, model=BlockedApp):
     ]
 
 
-# ---------------- SCREEN TIME ----------------
 class ScreenTimeAdmin(ModelView, model=ScreenTimeLog):
     icon = "fa-solid fa-clock"
     column_list = [
@@ -244,7 +272,6 @@ class ScreenTimeAdmin(ModelView, model=ScreenTimeLog):
     ]
 
 
-# ---------------- DEVOTION ----------------
 class DevotionAdmin(ModelView, model=DevotionLog):
     icon = "fa-solid fa-cross"
     column_list = [
@@ -255,7 +282,6 @@ class DevotionAdmin(ModelView, model=DevotionLog):
     ]
 
 
-# ---------------- BADGES ----------------
 class BadgeAdmin(ModelView, model=Badge):
     icon = "fa-solid fa-trophy"
     column_list = [Badge.id, Badge.name, Badge.requirement_value]
@@ -266,13 +292,17 @@ class UserBadgeAdmin(ModelView, model=UserBadge):
     column_list = [UserBadge.id, UserBadge.earned_at]
 
 
-# ---------------- AI CHAT ----------------
 class AIChatAdmin(ModelView, model=AIChat):
     icon = "fa-solid fa-robot"
-    column_list = [AIChat.id, AIChat.session_id, AIChat.role, AIChat.created_at]
+    column_list = [
+        AIChat.id,
+        AIChat.session_id,
+        AIChat.role,
+        AIChat.created_at,
+    ]
 
 
-# register all
+# REGISTER VIEWS
 admin.add_view(UserAdmin)
 admin.add_view(ReminderAdmin)
 admin.add_view(JournalAdmin)
@@ -287,16 +317,13 @@ admin.add_view(AIChatAdmin)
 
 
 # ─────────────────────────────────────────────────────────────
-# CUSTOM DASHBOARD HOME
+# PAGES
 # ─────────────────────────────────────────────────────────────
 @app.get("/admin-home")
 async def admin_home():
     return RedirectResponse("/admin")
 
 
-# ─────────────────────────────────────────────────────────────
-# HEALTH
-# ─────────────────────────────────────────────────────────────
 @app.get("/")
 async def root():
     return {
@@ -310,12 +337,3 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
-
-
-from fastapi.staticfiles import StaticFiles
-
-app.mount(
-    "/admin/statics",
-    StaticFiles(directory="venv/Lib/site-packages/sqladmin/statics"),
-    name="admin-statics",
-)
