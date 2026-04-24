@@ -310,3 +310,12 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
+
+
+from fastapi.staticfiles import StaticFiles
+
+app.mount(
+    "/admin/statics",
+    StaticFiles(directory="venv/Lib/site-packages/sqladmin/statics"),
+    name="admin-statics",
+)
