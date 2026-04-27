@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     ANTHROPIC_API_KEY: str = ""
 
-    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173,https://godfident-frontend.onrender.com"
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173,https://godfident-frontend.onrender.com,http://localhost:58771/",
 
     FIREBASE_SERVER_KEY: str = ""
     
